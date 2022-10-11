@@ -6,6 +6,7 @@ use Symfony\Component\Console\Output\OutputInterface;
 use GuzzleHttp\ClientInterface;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Input\InputArgument;
+use Symfony\Component\Console\Input\InputOption;
 
 class ShowCommand extends Command
 {
@@ -23,13 +24,17 @@ class ShowCommand extends Command
     {
         $this->setName('show')
              ->setDescription('Show movie details')
-             ->addArgument('movieName', InputArgument::REQUIRED);
+             ->addArgument('movieName', InputArgument::REQUIRED)
+             ->addOption('fullPlot', null, InputOption::VALUE_NONE, 'Displays full plot of the movie');
             
     }
 
     public function execute(InputInterface $input, OutputInterface $output)
     {
         $link = 'http://www.omdbapi.com/?apikey=7c250955&t=' . $input->getArgument(('movieName'));
+        if ($input->getOption('fullPlot')) {
+            $link = $link . '&plot=full';
+        }
         $data = json_decode($this->download($link), true);
         $message = $data['Title'] . ' - ' . $data['Year'];
         $output->writeln("<info>{$message}</info>");
@@ -42,7 +47,9 @@ class ShowCommand extends Command
                 ]);
             }
         }
+        $table->setColumnMaxWidth(1, 150);
         $table->render();
+        return 0;
     }
 
     private function download(String $link)
